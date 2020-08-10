@@ -12,6 +12,12 @@ RUN apk upgrade --update && apk add -U tzdata
  
 RUN cp /usr/share/zoneinfo/${DEFAULT_TIMEZONE} /etc/localtime
 
+RUN set -x ; \
+  addgroup -g 82 -S www-data ; \
+  addgroup -g 82 -S xfs ; \
+  adduser -u 82 -D -S -G www-data www-data && exit 0 ; exit 1 \
+  usermod -a -G xfs www-data
+
 # Install packages and remove default server definition
 RUN apk --no-cache add php7 php7-fpm php7-opcache php7-mysqli php7-json php7-openssl php7-curl \
     php7-zlib php7-xml php7-phar php7-intl php7-dom php7-xmlreader php7-ctype php7-session \
@@ -40,15 +46,15 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 # Configure supervisord
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Make sure files/folders needed by the processes are accessable when they run under the nobody user
-RUN chown -R nobody.nobody /app && \
-  chown -R nobody.nobody /var/www/html && \
-  chown -R nobody.nobody /run && \
-  chown -R nobody.nobody /var/lib/nginx && \
-  chown -R nobody.nobody /var/log/nginx
+# Make sure files/folders needed by the processes are accessable when they run under the www-data user
+RUN chown -R www-data.www-data /app && \
+  chown -R www-data.www-data /var/www/html && \
+  chown -R www-data.www-data /run && \
+  chown -R www-data.www-data /var/lib/nginx && \
+  chown -R www-data.www-data /var/log/nginx
 
 # Switch to use a non-root user from here on
-USER nobody
+USER www-data
 
 # Add application
 WORKDIR /app/web
