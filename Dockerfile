@@ -19,7 +19,10 @@ RUN apk --no-cache add php7 php7-fpm php7-opcache php7-mysqli php7-json php7-ope
     rm /etc/nginx/conf.d/default.conf
 
 # Create Site config folder
-RUN mkdir -p /etc/nginx/sites
+RUN mkdir -p /app
+RUN mkdir -p /app/config
+RUN mkdir -p /app/web
+
 
 # Configure nginx
 COPY config/nginx.conf /etc/nginx/nginx.conf
@@ -36,7 +39,7 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Make sure files/folders needed by the processes are accessable when they run under the nobody user
-RUN chown -R nobody.nobody /var/www/html && \
+RUN chown -R nobody.nobody /app && \
   chown -R nobody.nobody /run && \
   chown -R nobody.nobody /var/lib/nginx && \
   chown -R nobody.nobody /var/log/nginx
@@ -45,8 +48,8 @@ RUN chown -R nobody.nobody /var/www/html && \
 USER nobody
 
 # Add application
-WORKDIR /var/www/html
-COPY --chown=nobody src/ /var/www/html/
+WORKDIR /app/web
+#COPY --chown=nobody src/ /var/www/html/
 
 # Expose the port nginx is reachable on
 EXPOSE 80
